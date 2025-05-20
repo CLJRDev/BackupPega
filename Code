@@ -1,0 +1,46 @@
+// SFIS_SMO_STAT.Function.Func
+using System;
+using System.Data;
+using System.Data.OleDb;
+using System.IO;
+using System.Windows.Forms;
+
+public static DataSet GetDevByExcel(ref string oMsg)
+{
+	try
+	{
+		string empty = string.Empty;
+		string empty2 = string.Empty;
+		DataSet dataSet = new DataSet();
+		OpenFileDialog openFileDialog = new OpenFileDialog();
+		openFileDialog.InitialDirectory = "./.";
+		openFileDialog.Filter = "07Excel File(.xls)|*.xls|10Excel File(.xlsx)|*.xlsx";
+		if (openFileDialog.ShowDialog() != DialogResult.OK)
+		{
+			oMsg = "GetDevByExcel: not found";
+			return null;
+		}
+		FileInfo fileInfo = new FileInfo(openFileDialog.FileName);
+		string extension = fileInfo.Extension;
+		string fullName = fileInfo.FullName;
+		if (fullName != null)
+		{
+			string text = null;
+			text = ((!extension.Equals(".xlsx")) ? ("Provider=Microsoft.jet.OLEDB.4.0;Data Source=" + fullName + ";Extended Properties='Excel 8.0;IMEX=1;'") : ("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + fullName + ";Extended Properties='Excel 12.0;IMEX=1;'"));
+			OleDbConnection oleDbConnection = new OleDbConnection(text);
+			oleDbConnection.Open();
+			DataTable oleDbSchemaTable = oleDbConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[4] { null, null, null, "TABLE" });
+			string text2 = "[" + oleDbSchemaTable.Rows[0]["TABLE_NAME"].ToString() + "]";
+			string selectCommandText = "SELECT * FROM" + text2;
+			OleDbDataAdapter oleDbDataAdapter = new OleDbDataAdapter(selectCommandText, oleDbConnection);
+			oleDbDataAdapter.Fill(dataSet);
+			oleDbConnection.Close();
+		}
+		return dataSet;
+	}
+	catch (Exception ex)
+	{
+		oMsg = "GetDevByExcel: " + ex.Message;
+		return null;
+	}
+}
