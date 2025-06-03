@@ -9,5 +9,5 @@ WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status
 ERROR: Could not find a version that satisfies the requirement pygame (from versions: none)
 ERROR: No matching distribution found for pygame
 
-pip install pygame --trusted-host pypi.org --trusted-host files.pythonhosted.org --index-url http://pypi.org/simple
+https://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame
 
