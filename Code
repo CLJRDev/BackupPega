@@ -8,3 +8,6 @@ WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status
 WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))': /simple/pygame/
 ERROR: Could not find a version that satisfies the requirement pygame (from versions: none)
 ERROR: No matching distribution found for pygame
+
+pip install pygame --trusted-host pypi.org --trusted-host files.pythonhosted.org --index-url http://pypi.org/simple
+
