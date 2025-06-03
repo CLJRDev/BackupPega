@@ -1,3 +1,5 @@
+I'm using laptop provided by my company, so it was connected with company network. I want to install this library in python by when I install, it alerted the error like this. Please help me check why and how I can solve this isse?
+Here is the error:
 PS D:\Data\python> d:\Data\python\.venv\Scripts\python.exe -m pip install pygame
 WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))': /simple/pygame/
 WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))': /simple/pygame/
@@ -6,4 +8,3 @@ WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status
 WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ProtocolError('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))': /simple/pygame/
 ERROR: Could not find a version that satisfies the requirement pygame (from versions: none)
 ERROR: No matching distribution found for pygame
-PS D:\Data\python> 
