@@ -1,0 +1,199 @@
+Tôi đang gặp lỗi này:
+GET KPITEM QTY FROM KEY_MAP KEYTYPE:KPSN_QTY KEYID:KPITEM ATTRID: NO DATA FOUND!
+
+Với SP như này, hãy tìm nguyên nhân và cách khắc phục:
+CREATE OR REPLACE PROCEDURE tp.WK_CHKBURT_PWK_WK_LINKKP_DC(P_RET         OUT NUMBER,
+                                         P_MSG         OUT VARCHAR2,
+                                         P_DEV      IN     DEVICE.DEVICE%TYPE,
+                                         P_WKTYPE   IN     WKTYPE.WKTYPE%TYPE
+                                        )
+IS
+  --
+  ----------------------------------------------------
+  -- Program   : WK_CHKBURT_PWK_WK_LINKKP_DC
+  --             [�b UPD_ROUTE ���e�i��U���Ǹ����ˬd]
+  --
+  -- Version   : 1.01   2015/06/10
+  --
+  -- Parameters: p_DEV    - Device No.
+  --             p_WKTYPE - �I�s�� WKTYPE.
+  --             p_RET    - ���浲�G
+  --             p_MSG    - ����T��
+  --
+  -- MODIFICATION HISTORY
+  --  Person        Date      Comments
+  -- ---------   ----------  -------------------------
+  --  Ming       2024/10/18   CREATE IT. [VNBU7-20241021001]
+  --  Ming       2024/11/04   Modify. Insert ISN_SN_UNUNIQUE.SEQ NOT FIXED 1. [VNBU7-20241104001]
+  --  Ming       2024/11/14   Modify. Remove the check insert duplicate in ISN_SN_UNUNIQUE. [VNBU7-20241114002]
+
+  V_SPNAME          VARCHAR2(30);
+  EXERROR             EXCEPTION;
+  V_N               NUMBER(5);
+  V_CNT1            NUMBER(5);
+  VR_DEVINFO        DEVINFO%ROWTYPE;
+  V_INFO            DEVINFO.INFO%TYPE;
+  VR_ISN            ISN%ROWTYPE;
+  V_ITEM            MOKP.KPITEM%TYPE;
+  V_FOUND           BOOLEAN;
+  V_KPITEM          MOKP.KPITEM%TYPE;
+  VR_MOKP           MOKP%ROWTYPE;
+  V_OP              OP.OP%TYPE;
+  VR_MOD            MO_D%ROWTYPE;
+  V_STEP            MO_D.STEP%TYPE;
+  V_QTY             NUMBER(6);
+  V_SQTY            NUMBER(6);
+  VR_ROUTE_STEP     ROUTE_STEP%ROWTYPE;
+  V_MO              DEVINFO.INFO%TYPE;
+  V_CNT2            NUMBER(6);
+
+  TYPE CUR_TYPE IS REF CURSOR;
+  CUR_DEVINFO       CUR_TYPE;
+  CUR_MOITEM        CUR_TYPE;
+
+BEGIN
+  V_SPNAME := '(WK_CHKBURT_PWK_WK_LINKKP_DC)';
+  P_MSG := 'DEVINFO[ISN] ';
+  SELECT INFO
+    INTO V_INFO
+    FROM DEVINFO
+   WHERE DEVICE = P_DEV AND CLASS = 100;
+  P_MSG := 'DEVINFO[OP] ';
+  SELECT INFO
+    INTO V_OP
+    FROM DEVINFO
+   WHERE DEVICE = P_DEV AND CLASS = 1;
+  P_MSG := 'ISN ';
+  SELECT *
+    INTO VR_ISN
+    FROM ISN
+   WHERE ISN = V_INFO;
+  P_MSG := 'MO_D ';
+  SELECT *
+    INTO VR_MOD
+    FROM MO_D
+   WHERE ISN = VR_ISN.ISN;
+   SELECT COUNT(*)
+     INTO V_CNT2
+     FROM DEVINFO
+    WHERE DEVICE = P_DEV AND CLASS = 88;
+  IF V_CNT2 = 0 THEN
+     P_MSG:='DCSN NOT FOUND! PLS SCAN DCSN FIRST.';
+    RAISE EXERROR;
+  END IF;
+  P_MSG := 'GET ROUTE STEP ';
+  GET_DEVSTEP(VR_MOD.ROUTE, P_DEV, V_STEP);
+  P_MSG := 'ROUTE_STEP ';
+  SELECT *
+    INTO VR_ROUTE_STEP
+    FROM ROUTE_STEP
+   WHERE ROUTE = VR_MOD.ROUTE AND STEP = V_STEP;
+  OPEN CUR_DEVINFO FOR
+    SELECT   *
+        FROM DEVINFO
+       WHERE DEVICE = P_DEV AND CLASS =88
+    ORDER BY CLASS;
+  FETCH CUR_DEVINFO INTO VR_DEVINFO;
+  WHILE CUR_DEVINFO%FOUND
+  LOOP
+    V_FOUND := FALSE;
+    P_MSG := 'CURSOR MOKP[' || VR_ISN.MO || ']';
+    OPEN CUR_MOITEM FOR
+      SELECT KPITEM
+        FROM MOKP
+       WHERE MO = VR_ISN.MO;
+    FETCH CUR_MOITEM INTO V_ITEM;
+    IF CUR_MOITEM%NOTFOUND THEN
+      P_MSG := 'MO[' || VR_ISN.MO || '] MO_ITEM IS NULL!';
+      RAISE EXERROR;
+    END IF;
+    WHILE CUR_MOITEM%FOUND
+    LOOP
+      CHK_RULE_SP('CHKSN_DCSN', VR_DEVINFO.INFO, NULL, V_ITEM, P_RET, P_MSG);
+      IF P_RET = 1 THEN
+        V_FOUND := TRUE;
+        V_KPITEM := V_ITEM;
+        EXIT;
+      END IF;
+      FETCH CUR_MOITEM INTO V_ITEM;
+    END LOOP;
+    CLOSE CUR_MOITEM;
+    SELECT COUNT(*)
+        INTO V_CNT1
+        FROM DEVINFO
+       WHERE DEVICE = P_DEV AND CLASS = 89;
+      IF V_CNT1 = 0 THEN
+        P_MSG := 'GET KPITEM QTY FROM KEY_MAP KEYTYPE:KPSN_QTY KEYID:KPITEM ATTRID:' || V_KPITEM;
+        SELECT TO_NUMBER(ATTRINFO)
+          INTO V_QTY
+          FROM KEY_MAP
+         WHERE KEYTYPE = 'KPSN_QTY' AND KEYID = 'KPITEM' AND ATTRID = V_KPITEM;
+        DEVINFO_INSUPD(P_DEV, '89', V_QTY - 1, P_RET, P_MSG);
+        IF P_RET = 0 THEN
+          RAISE EXERROR;
+        END IF;
+      ELSE
+        P_MSG := 'GET QTY FROM DEVINFO CLASS:89';
+        SELECT INFO
+          INTO V_SQTY
+          FROM DEVINFO
+         WHERE DEVICE = P_DEV AND CLASS = 89;
+        IF V_SQTY - 1 = 0 THEN
+          DELETE DEVINFO
+           WHERE DEVICE = P_DEV AND CLASS = 88;
+          DELETE DEVINFO
+           WHERE DEVICE = P_DEV AND CLASS = 89;
+        ELSE
+          UPDATE DEVINFO
+             SET INFO = INFO - 1
+           WHERE DEVICE = P_DEV AND CLASS = 89;
+        END IF;
+      END IF;
+    IF V_FOUND THEN
+      P_MSG := ' KPITEM[' || V_KPITEM || '] IN MOKP';
+      SELECT *
+        INTO VR_MOKP
+        FROM MOKP
+       WHERE MO = VR_ISN.MO AND KPITEM = V_KPITEM;
+      IF INSTR(NVL(VR_ROUTE_STEP.KP1, '?'), VR_MOKP.KPBC) = 0 AND INSTR(NVL(VR_ROUTE_STEP.KP2, '?'), VR_MOKP.KPBC) = 0
+          AND INSTR(NVL(VR_ROUTE_STEP.KP3, '?'), VR_MOKP.KPBC) = 0 THEN
+            P_MSG := ' KPITEM(KPBC) [' || V_KPITEM || '][' || VR_MOKP.KPBC || ']  NOT ALLOW LINKED!!';
+          RAISE EXERROR;
+      END IF;
+      SELECT COUNT(*)
+        INTO V_N
+        FROM ISN_SN_UNUNIQUE
+       WHERE ISN = VR_ISN.ISN AND SNTYPE='DCSN';
+      SELECT COUNT(*)
+        INTO V_CNT1
+        FROM ISN_SN_UNUNIQUE
+       WHERE ISN = VR_ISN.ISN AND SNTYPE='DCSN' AND ITEM = V_KPITEM;
+/*      IF V_CNT1 > 0 AND V_CNT1 >= VR_MOKP.KPCOUNT THEN
+        P_MSG := 'KPITEM:[' || V_KPITEM || '] ALREADY LINKED:' || TO_CHAR(V_CNT1) || ' OVERLOADED!!';
+        RAISE EXERROR;
+      ELSE*/
+        P_MSG := 'INSERT ISN_SN_UNUNIQUE EXERROR!';
+        INSERT INTO ISN_SN_UNUNIQUE (ISN,SNTYPE,SN,INTIME,DEVICE,OP,SEQ,SLOT,ITEM)
+             VALUES (VR_ISN.ISN, 'DCSN', VR_DEVINFO.INFO, SYSDATE, P_DEV, V_OP, V_N+1, 0, V_KPITEM); --CHRIS MODIFIED. �̾ڨ�J����T�A�ӨM�wLINK KPITEM�٬O�Ȥ�Ƹ�
+  /*    END IF;*/
+    ELSE
+      P_MSG := 'THIS SN ' || VR_DEVINFO.INFO || ' NOT COINCIDENCE ANY ITEM RULE!';
+      RAISE EXERROR;
+    END IF;
+    FETCH CUR_DEVINFO INTO VR_DEVINFO;
+  END LOOP;
+  CLOSE CUR_DEVINFO;
+
+  P_RET := 1;
+  P_MSG := 'DATA INSERT OK!';
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    P_RET := 0;
+    P_MSG := P_MSG || ' NO DATA FOUND!-' || V_SPNAME;
+  WHEN EXERROR THEN
+    P_RET := 0;
+    P_MSG := P_MSG || '-' || V_SPNAME;
+  WHEN OTHERS THEN
+    P_RET := 0;
+    P_MSG := P_MSG || '-' || SUBSTR(SQLERRM, 1, 200) || V_SPNAME;
+END; -- Procedure
