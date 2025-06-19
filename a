@@ -1,2 +1,0 @@
-Tôi muốn select thông tin để tìm ra những isninfo có SN2 là số chẵn ở substring kia, nhưng không được, tôi đang dùng sql oracle
-SELECT * FROM isninfo WHERE isn IN (SELECT ISN FROM MO_D WHERE MO = 'TFS56601') AND substr(sn2,18,3) % 2 = 0 ORDER BY sn2;
