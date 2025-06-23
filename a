@@ -1,0 +1,14 @@
+Tôi có đoạn query như này ở SQL, tôi đang phải join 3 bảng isn_sn_mac, khi cột mac_1 có thông tin thì mac_2 và mac_3 không có, tương tự vậy trên 1 hàng chỉ có duy nhất 1 mac được xuất hiện khi tôi query như này. tôi đnag muốn gộp chúng và 1 cột thôi để dễ quan sát. Có cách nào không?
+
+WITH t1 AS (
+SELECT a.isn, b.mac mac1, e.mac mac2, g.mac mac3, a.device, a.step, a.intime, a.item, row_number() over (PARTITION BY a.isn ORDER BY a.intime DESC) rn
+FROM MO_ROUTE a
+LEFT JOIN isn_sn_mac b ON a.isn = b.isn AND b.seq = 1
+LEFT JOIN mokp_d c ON a.isn = c.isn AND c.kpbc = 'MAD'
+LEFT JOIN mokp_d d ON c.kpsn = d.isn AND d.kpbc = 'MB'
+LEFT JOIN isn_sn_mac e ON e.isn = d.kpsn AND e.seq = 1
+LEFT JOIN mokp_d f ON a.isn = f.isn AND f.kpbc = 'MB'
+LEFT JOIN isn_sn_mac g ON g.isn = f.kpsn AND g.seq = 1
+WHERE a.GRP = 'TU0' AND a.intime
+BETWEEN TO_DATE('2025-06-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS') AND  SYSDATE)
+SELECT * FROM t1 WHERE rn = 1;
