@@ -1,7 +1,0 @@
-Tôi đang bị đoạn này khi in ra biến GW_1 ở tem file MRT thì sẽ bị mất số 0 ở đâu. Vì hiện tại SCARTON.GW đang có giá trị là 0.28. Nguyên nhân là gì, có hàm nào ở mrt để giữ nguyên số 0 đó không?
-
-Đây là SP sql:
-LAB_INSUPD_VALUES('I', P_DEV, VR_DEVOUTPUT.OUTDEVID, V_IOTYPE, 1, 'GW_1', VR_SCARTON.GW, V_OP, P_RET, P_MSG, 'N');
-
-Đây là MRT nhận giá trị từ SP:
-G.W.  {GW_1}KGS
