@@ -1,6 +1,0 @@
-Lấy định dạng của intime sau khi query sẽ là: YYYY-MM-DD 24HH-MM
-
-SELECT a.model, a.isn, a.grp, a.device, TO_CHAR(a.intime), a.mo, a.item, b.so
-FROM mo_route a
-INNER JOIN isn b ON a.isn = b.isn AND b.model IN ('AF903','AF900','AFCF25')
-WHERE a.grp = 'TWN' AND a.intime BETWEEN TO_DATE('2025/06/16 08:00', 'YYYY/MM/DD HH24:MI') AND TO_DATE('2025/07/01 08:00', 'YYYY/MM/DD HH24:MI') ORDER BY a.intime DESC
