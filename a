@@ -1,7 +1,7 @@
-Tại sao khi tôi query với 1 SO như này thì thông tin ra đúng như sau
 WITH t1 AS (
     SELECT 
-        a.so, 
+        a.so,
+        a.soline,
         a.item, 
         b.kpitem, 
         b.kpbc
@@ -9,126 +9,77 @@ WITH t1 AS (
     INNER JOIN mokp_d b 
         ON a.isn = b.isn 
         AND b.kpbc IN ('LD', 'MB', 'FPC', 'BO')
-    WHERE a.so IN
-('W001750195')
+    WHERE a.so IN (
+'W001694935','W001705912','W001709314','W001710895','W001708486','W001711420','W001714183','W001714292','W001714296','W001714345'
+,'W001720557','W001720559','W001720562','W001725223','W001727630','W001727632','W001730161','W001730164','W001732674'
+,'W001732660','W001732663','W001732653','W001732657','W001732658','W001732659','W001740098','W001732671','W001732672'
+,'W001732673','W001740122','W001740566','W001743217','W001743219','W001732665','W001742904','W001740567','W001740385'
+,'W001742957','W001742959','W001742905','W001740569','W001746775','W001740571','W001740572','W001746776','W001746777'
+,'W001750441','W001740574','W001749636','W001749656','W001749659','W001750442','W001749662','W001742902','W001747634'
+,'W001747635','W001753962','W001749672','W001753984','W001753985','W001754785','W001754786','W001743221','W001753958'
+,'W001753970','W001753975','W001749664','W001749670','W001754778','W001754780','W001745596','W001755104','W001754779'
+,'W001754783','W001759056','W001749019','W001749021','W001750193','W001750195','W001755106','W001753979','W001753980'
+)),
+ld AS (
+    SELECT so, soline, item, kpitem FROM t1 WHERE kpbc = 'LD'
 ),
-ld AS (SELECT kpitem FROM t1 WHERE kpbc = 'LD'),
-mb AS (SELECT kpitem FROM t1 WHERE kpbc = 'MB'),
-fpc AS (SELECT kpitem FROM t1 WHERE kpbc = 'FPC'),
-bo AS (SELECT kpitem FROM t1 WHERE kpbc = 'BO'),
+mb AS (
+    SELECT so, soline, item, kpitem FROM t1 WHERE kpbc = 'MB'
+),
+fpc AS (
+    SELECT so, soline, item, kpitem FROM t1 WHERE kpbc = 'FPC'
+),
+bo AS (
+    SELECT so, soline, item, kpitem FROM t1 WHERE kpbc = 'BO'
+),
 combos AS (
     SELECT 
+        ld.so,
+        ld.soline,
+        ld.item,
         ld.kpitem AS key1,
         mb.kpitem AS key2,
         fpc.kpitem AS key3,
         bo.kpitem AS key4
     FROM ld
-    CROSS JOIN mb
-    CROSS JOIN fpc
-    CROSS JOIN bo
+    JOIN mb ON ld.so = mb.so AND ld.item = mb.item
+    JOIN fpc ON ld.so = fpc.so AND ld.item = fpc.item
+    JOIN bo ON ld.so = bo.so AND ld.item = bo.item
 )
 SELECT 
-    t1.so,
-    t1.item,
-    kc.KEYID,
+    combos.so,
+    combos.soline,
+    combos.item,
+    b.custitemnm "LCD",
+    c.custinfo07 "MB",
+    d.custitemnm "FPC",
     kc.KEYINFO,
     kc.KEYVALUE1,
     kc.KEYVALUE2,
     kc.KEYVALUE3,
     kc.KEYVALUE4
 FROM combos
-JOIN key_config kc 
-    ON kc.KEYVALUE1 = combos.key1
-    AND kc.KEYVALUE2 = combos.key2
-    AND kc.KEYVALUE3 = combos.key3
-    AND kc.KEYVALUE4 = combos.key4
-JOIN t1 ON 1=1
-WHERE kc.KEYTYPE = 'CHK_AURA_SKU'
-  AND kc.KEYID = t1.item
+JOIN key_config kc ON kc.KEYVALUE1 = combos.key1 AND kc.KEYVALUE2 = combos.key2 AND kc.KEYVALUE3 = combos.key3 AND kc.KEYVALUE4 = combos.key4
+JOIN item b ON kc.keyvalue1 = b.item
+JOIN item_custinfo c ON kc.keyvalue2 = c.item
+JOIN item d ON kc.keyvalue3 = d.item
+WHERE kc.KEYTYPE = 'CHK_AURA_SKU' AND kc.KEYID = combos.item
 GROUP BY 
-    t1.so,
-    t1.item,
-    kc.KEYID,
+    combos.so,
+    combos.soline,
+    combos.item,
+    b.custitemnm,
+    c.custinfo07,
+    d.custitemnm,
     kc.KEYINFO,
     kc.KEYVALUE1,
     kc.KEYVALUE2,
     kc.KEYVALUE3,
     kc.KEYVALUE4;
 	
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0007	1823-04CN0B7	69E54VM10A02	69E54VD10A11	0A02-02LK0B7
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0005	1823-04CN0B7	69E54VM10A22	69E54VD10A11	0A02-02LK0B7
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0023	1823-04CN0B7	69E54VM10A03	69E54VD10A11	0A02-02LK0B7
-
-Còn với SO W001747634 thì thông tin là 
-W001747634	90E54V100030	90E54V100030	AF900-BLK-PG0001	1823-04AG0B7	69E54VM10A02	69E54VD10A01	0A02-02LK0B7
-
-Như vậy khi tôi query 2 SO thì thông tin phải là 4 dòng. Nhưng hiện tại lại ra 12 dòng như này
-
-WITH t1 AS (
-    SELECT 
-        a.so, 
-        a.item, 
-        b.kpitem, 
-        b.kpbc
-    FROM isn a
-    INNER JOIN mokp_d b 
-        ON a.isn = b.isn 
-        AND b.kpbc IN ('LD', 'MB', 'FPC', 'BO')
-    WHERE a.so IN
-('W001750195', 'W001747634')
-),
-ld AS (SELECT kpitem FROM t1 WHERE kpbc = 'LD'),
-mb AS (SELECT kpitem FROM t1 WHERE kpbc = 'MB'),
-fpc AS (SELECT kpitem FROM t1 WHERE kpbc = 'FPC'),
-bo AS (SELECT kpitem FROM t1 WHERE kpbc = 'BO'),
-combos AS (
-    SELECT 
-        ld.kpitem AS key1,
-        mb.kpitem AS key2,
-        fpc.kpitem AS key3,
-        bo.kpitem AS key4
-    FROM ld
-    CROSS JOIN mb
-    CROSS JOIN fpc
-    CROSS JOIN bo
-)
-SELECT 
-    t1.so,
-    t1.item,
-    kc.KEYID,
-    kc.KEYINFO,
-    kc.KEYVALUE1,
-    kc.KEYVALUE2,
-    kc.KEYVALUE3,
-    kc.KEYVALUE4
-FROM combos
-JOIN key_config kc 
-    ON kc.KEYVALUE1 = combos.key1
-    AND kc.KEYVALUE2 = combos.key2
-    AND kc.KEYVALUE3 = combos.key3
-    AND kc.KEYVALUE4 = combos.key4
-JOIN t1 ON 1=1
-WHERE kc.KEYTYPE = 'CHK_AURA_SKU'
-  AND kc.KEYID = t1.item
-GROUP BY 
-    t1.so,
-    t1.item,
-    kc.KEYID,
-    kc.KEYINFO,
-    kc.KEYVALUE1,
-    kc.KEYVALUE2,
-    kc.KEYVALUE3,
-    kc.KEYVALUE4;
 	
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0007	1823-04CN0B7	69E54VM10A02	69E54VD10A11	0A02-02LK0B7
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0019	1823-04CN0B7	69E54VM10A03	69E54VD10A01	0A02-02LK0B7
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0005	1823-04CN0B7	69E54VM10A22	69E54VD10A11	0A02-02LK0B7
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0003	1823-04CN0B7	69E54VM10A02	69E54VD10A01	0A02-02LK0B7
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0001	1823-04CN0B7	69E54VM10A22	69E54VD10A01	0A02-02LK0B7
-W001750195	90E54V1000G0	90E54V1000G0	AFCF25-BLK-PG0023	1823-04CN0B7	69E54VM10A03	69E54VD10A11	0A02-02LK0B7
-W001747634	90E54V100030	90E54V100030	AF900-BLK-PG0017 	1823-04AG0B7	69E54VM10A03	69E54VD10A01	0A02-02LK0B7
-W001747634	90E54V100030	90E54V100030	AF900-BLK-PG0001 	1823-04AG0B7	69E54VM10A02	69E54VD10A01	0A02-02LK0B7
-W001747634	90E54V100030	90E54V100030	AF900-BLK-PG0003 	1823-04AG0B7	69E54VM10A22	69E54VD10A01	0A02-02LK0B7
-W001747634	90E54V100030	90E54V100030	AF900-BLK-PG0007 	1823-04AG0B7	69E54VM10A22	69E54VD10A11	0A02-02LK0B7
-W001747634	90E54V100030	90E54V100030	AF900-BLK-PG0021 	1823-04AG0B7	69E54VM10A03	69E54VD10A11	0A02-02LK0B7
-W001747634	90E54V100030	90E54V100030	AF900-BLK-PG0005 	1823-04AG0B7	69E54VM10A02	69E54VD10A11	0A02-02LK0B7	
+Tôi gặp lỗi không thể join ở đoạn này, hãy giúp tôi sửa để chạy được. Thông báo lỗi như sau: [1]: ORA-01652: cannot extend temporary segment: cannot extend temporary segment by 128 [tablespace TEMP)
+Đoạn báo lỗi đây:
+JOIN item b ON kc.keyvalue1 = b.item
+JOIN item_custinfo c ON kc.keyvalue2 = c.item
+JOIN item d ON kc.keyvalue3 = d.item
