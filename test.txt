@@ -1,1 +1,24 @@
-PHILIPS buscu HRD
+# 👋 Farewell & Handover Notes
+
+Hi there,
+
+If you're reading this, it probably means I've moved on to the next chapter of my journey. Before leaving, I’ve tried my best to put together all the relevant documents, context, and resources in this folder to help make any transitions as smooth as possible.
+
+This handover contains:
+- 📁 Key project overviews
+- 📄 Important documents and links
+- 🛠️ Tips and notes for ongoing tasks
+- 📌 Contact points and responsibilities
+
+Please don’t hesitate to reach out to [insert relevant contact person/email] if you need further clarification or support.
+
+---
+
+## 🙏 A Note of Thanks
+
+Working here has been a meaningful and memorable experience. I'm truly grateful for the collaboration, challenges, and growth that came with this role. To whoever is continuing the work — I hope you find as much learning and joy in it as I did.
+
+Wishing you all the best in your work ahead!
+
+Take care,  
+**[Your Name]**
