@@ -1,0 +1,19 @@
+SELECT 
+    a.*,
+    b.PTYP AS NSTEP_CHECK,
+    b.PFLAG1,
+    b.PDESC,
+    c.nstep,
+    d.ptyp AS STEP_CHECK,
+    e.NEWGRP AS ROUTE_GRP
+FROM route_step a
+LEFT JOIN route_step_nstep b 
+    ON b.step = a.step
+LEFT JOIN route_step_nstep_d c 
+    ON c.step = b.step AND c.seq = b.seq
+LEFT JOIN route_step_check d 
+    ON d.step = a.STEP
+LEFT JOIN route_grp e 
+    ON e.route = a.route AND e.grp = a.grp
+WHERE a.step = 'MKBAWWQC'
+ORDER BY a.ridx;
