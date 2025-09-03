@@ -1,19 +1,52 @@
+-- Truy xuất và gom thông tin từ các bảng phụ
+WITH nstep_agg AS (
+    SELECT
+        step,
+        STRING_AGG(PTYP, ';') AS NSTEP_CHECK,
+        STRING_AGG(PFLAG1, ';') AS PFLAG1,
+        STRING_AGG(PDESC, ';') AS PDESC
+    FROM route_step_nstep
+    WHERE step = 'MKBAWWQC'
+    GROUP BY step
+),
+nstep_d_agg AS (
+    SELECT
+        step,
+        STRING_AGG(CAST(nstep AS VARCHAR), ';') AS NSTEP
+    FROM route_step_nstep_d
+    WHERE step = 'MKBAWWQC'
+    GROUP BY step
+),
+step_check_agg AS (
+    SELECT
+        step,
+        STRING_AGG(ptyp, ';') AS STEP_CHECK
+    FROM route_step_check
+    WHERE step = 'MKBAWWQC'
+    GROUP BY step
+),
+route_grp_agg AS (
+    SELECT
+        route,
+        grp,
+        STRING_AGG(NEWGRP, ';') AS ROUTE_GRP
+    FROM route_grp
+    GROUP BY route, grp
+)
+
+-- Gộp tất cả lại với route_step
 SELECT 
     a.*,
-    b.PTYP AS NSTEP_CHECK,
+    b.NSTEP_CHECK,
     b.PFLAG1,
     b.PDESC,
-    c.nstep,
-    d.ptyp AS STEP_CHECK,
-    e.NEWGRP AS ROUTE_GRP
+    c.NSTEP,
+    d.STEP_CHECK,
+    e.ROUTE_GRP
 FROM route_step a
-LEFT JOIN route_step_nstep b 
-    ON b.step = a.step
-LEFT JOIN route_step_nstep_d c 
-    ON c.step = b.step AND c.seq = b.seq
-LEFT JOIN route_step_check d 
-    ON d.step = a.STEP
-LEFT JOIN route_grp e 
-    ON e.route = a.route AND e.grp = a.grp
+LEFT JOIN nstep_agg b ON b.step = a.step
+LEFT JOIN nstep_d_agg c ON c.step = a.step
+LEFT JOIN step_check_agg d ON d.step = a.step
+LEFT JOIN route_grp_agg e ON e.route = a.route AND e.grp = a.grp
 WHERE a.step = 'MKBAWWQC'
 ORDER BY a.ridx;
